@@ -561,7 +561,7 @@ void solve_and_commit (Zypper & zypper)
 
     if (zypper.out().verbosity() == Out::HIGH)
       summary.setViewOption(Summary::SHOW_VERSION);
-    else if (zypper.out().verbosity() == Out::DEBUG)
+    else if (zypper.out().verbosity() == Out::DEBUG) // for option '--test' Out::DEBUG got set ???
       summary.setViewOption(Summary::SHOW_ALL);
 
     // show not updated packages if 'zypper up' (-t package or -t product)
@@ -578,7 +578,11 @@ void solve_and_commit (Zypper & zypper)
     }
 
     // if running on SUSE Linux Enterprise, report unsupported packages
-    Product::constPtr platform = God->target()->baseProduct();
+    Product::constPtr platform;
+    if ( God->getTarget() )
+    {
+      platform = God->target()->baseProduct();
+    }
     if (platform && platform->name().find("SUSE_SLE") != string::npos)
       summary.setViewOption(Summary::SHOW_UNSUPPORTED);
     else

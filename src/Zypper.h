@@ -70,7 +70,9 @@ struct GlobalOptions
   no_abbrev(false),
   terse(false),
   changedRoot(false),
-  ignore_unknown(false)
+  ignore_unknown(false),
+  test(false),
+  test_dir("")
   {}
 
 //  std::list<zypp::Url> additional_sources;
@@ -106,6 +108,8 @@ struct GlobalOptions
   bool terse;
   bool changedRoot;
   bool ignore_unknown;
+  bool test;
+  std::string test_dir;
 };
 
 /**

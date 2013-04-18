@@ -42,6 +42,10 @@
 #include "Command.h"
 #include "SolverRequester.h"
 
+#define INCLUDE_TESTSETUP_WITHOUT_BOOST
+#include "tests/lib/TestSetup.h"
+#undef  INCLUDE_TESTSETUP_WITHOUT_BOOST
+
 #include "Table.h"
 #include "utils/misc.h"
 #include "utils/messages.h"
@@ -181,6 +185,7 @@ void print_main_help(Zypper & zypper)
     "\t--raw-cache-dir <dir>\tUse alternative raw meta-data cache directory.\n"
     "\t--solv-cache-dir <dir>\tUse alternative solv file cache directory.\n"
     "\t--pkg-cache-dir <dir>\tUse alternative package cache directory.\n"
+    "\t--test <dir>\tRead solver test case directory.\n"
   );
 
   static string help_global_repo_options = _("     Repository Options:\n"
@@ -317,6 +322,22 @@ void print_command_help_hint(Zypper & zypper)
 
 int Zypper::defaultLoadSystem( LoadSystemFlags flags_r )
 {
+  if ( _gopts.test )
+  {
+    if ( TestSetup::isTestcase( _gopts.test_dir ) )
+    {
+      out().info( str::form(_("Load test case from '%s'"), _gopts.test_dir.c_str()) );
+      TestSetup test;
+      test.loadTestcaseRepos( Pathname(_gopts.test_dir.c_str()) );
+      return ZYPPER_EXIT_OK;
+    }
+    else
+    {
+      out().error( str::form(_("Cannot load test case from '%s'"), _gopts.test_dir.c_str()) );
+      return ZYPPER_EXIT_ERR_INVALID_ARGS;
+    }
+  }
+
   DBG << "FLAGS:" << flags_r << endl;
   if ( ! flags_r.testFlag( NO_POOL ) )
   {
@@ -328,7 +349,7 @@ int Zypper::defaultLoadSystem( LoadSystemFlags flags_r )
     {
       init_repos(*this);
       if ( exitCode() != ZYPPER_EXIT_OK )
-	return exitCode();
+        return exitCode();
     }
 
     DtorReset _tmp( _gopts.disable_system_resolvables );
@@ -380,6 +401,7 @@ void Zypper::processGlobalOptions()
     {"no-gpg-checks",              no_argument,       0,  0 },
     {"gpg-auto-import-keys",       no_argument,       0,  0 },
     {"root",                       required_argument, 0, 'R'},
+    {"test",                       required_argument, 0, 'T'},
     {"reposd-dir",                 required_argument, 0, 'D'},
     {"cache-dir",                  required_argument, 0, 'C'},
     {"raw-cache-dir",              required_argument, 0,  0 },
@@ -561,6 +583,12 @@ void Zypper::processGlobalOptions()
 
     DBG << "root dir = " << _gopts.root_dir << endl;
     _gopts.rm_options = RepoManagerOptions(_gopts.root_dir);
+  }
+
+  if ( (it = gopts.find("test")) != gopts.end() ) {
+      _gopts.test_dir = it->second.front();
+      _gopts.test = true;
+      MIL << "Try to load test case from " << _gopts.test_dir << endl;
   }
 
   if ((it = gopts.find("reposd-dir")) != gopts.end()) {
@@ -2613,7 +2641,13 @@ void Zypper::processCommandOptions()
     return;
 
   // parse command options
-  ::copts = _copts = parse_options (argc(), argv(), specific_options);
+  _copts = parse_options (argc(), argv(), specific_options);
+  if ( _gopts.test && !_copts.count("dry-run") )
+  {
+    cout << "Setting dry-run" << endl;
+    _copts["dry-run"].push_back("");
+  }
+  ::copts = _copts;
   if (copts.count("_unknown") || copts.count("_missing_arg"))
   {
     setExitCode(ZYPPER_EXIT_ERR_SYNTAX);
@@ -3617,6 +3651,10 @@ void Zypper::doCommand()
 
     //! \todo quit here if the argument list remains empty after founding only invalid rpm args
 
+    if ( defaultLoadSystem( Zypper::LoadSystemFlags() ) != ZYPPER_EXIT_OK )
+      return;
+
+#if 0
     // prepare repositories
     init_repos(*this);
     if (exitCode() != ZYPPER_EXIT_OK)
@@ -3635,6 +3673,14 @@ void Zypper::doCommand()
     load_resolvables(*this);
     // needed to compute status of PPP
     resolve(*this);
+#endif
+
+    if ( _rdata.repos.empty() && !_gopts.test )
+    {
+      out().error(_("Warning: No repositories defined."
+          " Operating only with the installed resolvables."
+          " Nothing can be installed."));
+    }
 
     // parse package arguments
     PackageArgs::Options argopts;
@@ -3840,12 +3886,16 @@ void Zypper::doCommand()
       }
     }
 
+    if ( defaultLoadSystem( Zypper::LoadSystemFlags() ) != ZYPPER_EXIT_OK )
+      return;
+
+#if 0
     initRepoManager();
 
     init_repos(*this);
     if (exitCode() != ZYPPER_EXIT_OK)
       return;
-
+#endif
     // add available repos to query
     if (cOpts().count("repo"))
     {
@@ -3947,12 +3997,14 @@ void Zypper::doCommand()
       }
     }
 
+#if 0
     init_target(*this);
 
     // now load resolvables:
     load_resolvables(*this);
     // needed to compute status of PPP
     resolve(*this);
+#endif
 
     Table t;
     t.lineStyle(Ascii);
