@@ -561,8 +561,8 @@ void solve_and_commit (Zypper & zypper)
 
     if (zypper.out().verbosity() == Out::HIGH)
       summary.setViewOption(Summary::SHOW_VERSION);
-    else if (zypper.out().verbosity() == Out::DEBUG) // for option '--test' Out::DEBUG got set ???
-      summary.setViewOption(Summary::SHOW_ALL);
+    else if (zypper.out().verbosity() == Out::DEBUG) // for option '--test' Out::DEBUG got set somehow
+      summary.setViewOption(Summary::SHOW_ALL);      // and therefore Summary::SHOW_ALL will be set
 
     // show not updated packages if 'zypper up' (-t package or -t product)
     ResKindSet kinds;
@@ -764,19 +764,27 @@ void solve_and_commit (Zypper & zypper)
             s << " " << _("(dry run)") << endl;
           zypper.out().info(s.str(), Out::HIGH);
 
-          ZYppCommitResult result = God->commit(get_commit_policy(zypper));
+          if ( !zypper.globalOpts().test )
+          {
+            ZYppCommitResult result = God->commit(get_commit_policy(zypper));
 
-          MIL << endl << "DONE" << endl;
+            MIL << endl << "DONE" << endl;
 
-          gData.show_media_progress_hack = false;
+            gData.show_media_progress_hack = false;
 
-          if ( ! result.noError() )
-            zypper.setExitCode(ZYPPER_EXIT_ERR_ZYPP);
+            if ( ! result.noError() )
+              zypper.setExitCode(ZYPPER_EXIT_ERR_ZYPP);
 
-          s.clear(); s << result;
-          zypper.out().info(s.str(), Out::HIGH);
+            s.clear(); s << result;
+            zypper.out().info(s.str(), Out::HIGH);
 
-          show_update_messages(zypper, result.updateMessages());
+            show_update_messages(zypper, result.updateMessages());
+          }
+          else
+          {
+            MIL << endl << "Test mode DONE" << endl;
+            zypper.out().info("Test mode done");
+          }
         }
         catch ( const media::MediaException & e )
         {
