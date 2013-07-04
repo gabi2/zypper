@@ -4782,7 +4782,7 @@ void Zypper::doCommand()
     }
     else
     {
-      cout << "Trusted public keys:" << cout;
+      cout << "Trusted public keys:" << endl;
       for_( key, keys.begin(), keys.end() )
       {
         cout << "Key ID: " << key->id() << " Name: " << key->name() << endl;
