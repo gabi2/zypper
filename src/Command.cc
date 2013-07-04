@@ -97,6 +97,8 @@ namespace
       //_T( RUG_INFO_REQUIREMENTS_e )| "info-obsoletes"	| "io";
       _T( RUG_PATCH_SEARCH_e )	| "patch-search" | "pse";
       _T( RUG_PING_e )		| "ping";
+
+      _T( LIST_KEYS_e )         | "keys"     | "lk";
 #undef _T
     }
     return _table;
@@ -172,6 +174,8 @@ DEF_ZYPPER_COMMAND( RUG_MOUNT );
 //DEF_ZYPPER_COMMAND( RUG_INFO_REQUIREMENTS );
 DEF_ZYPPER_COMMAND( RUG_PATCH_SEARCH );
 DEF_ZYPPER_COMMAND( RUG_PING );
+
+DEF_ZYPPER_COMMAND( LIST_KEYS );
 
 #undef DEF_ZYPPER_COMMAND
 ///////////////////////////////////////////////////////////////////

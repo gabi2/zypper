@@ -34,6 +34,7 @@
 #include <zypp/PoolQuery.h>
 #include <zypp/Locks.h>
 #include <zypp/Edition.h>
+#include <zypp/KeyRing.h>
 
 #include <zypp/target/rpm/RpmHeader.h> // for install <.rpmURI>
 
@@ -264,6 +265,12 @@ void print_main_help(Zypper & zypper)
     "\tremovelock, rl\t\tRemove a package lock.\n"
     "\tlocks, ll\t\tList current package locks.\n"
     "\tcleanlocks, cl\t\tRemove unused locks.\n"
+  );
+
+  static string help_key_commands = _("     Key Infos:\n"
+    "\tkeys, lk\t\tList public keys.\n"
+    "\taddkey, ak\t\tAdd key.\n"
+    "\tdeletekey, dk\t\tDelete key.\n"
   );
 
   static string help_other_commands = _("     Other Commands:\n"
@@ -2343,6 +2350,27 @@ void Zypper::processCommandOptions()
       "-d, --only-duplicates     Clean only duplicate locks.\n"
       "-e, --only-empty          Clean only locks which doesn't lock anything.\n"
     ));
+    break;
+  }
+
+  case ZypperCommand::LIST_KEYS_e:
+  {
+    static struct option options[] =
+    {
+      {"help", no_argument, 0, 'h'},
+      {"trusted", no_argument, 0, 't'},
+      {0, 0, 0, 0}
+    };
+    specific_options = options;
+    _command_help = _(
+      "keys (lk)\n"
+      "\n"
+      "List public keys.\n"
+      "\n"
+      "\n"
+      "  Command options:\n"
+      "-t, --trusted     List only trusted keys.\n"
+    );
     break;
   }
 
@@ -4716,6 +4744,50 @@ void Zypper::doCommand()
         _PL("Removed %lu lock.","Removed %lu locks.", diff),
         (long unsigned) diff));
 
+    break;
+  }
+
+#if 0
+  case ZypperCommand::IMPORT_KEYS_e:
+  {
+    if (runningHelp()) { out().info(_command_help, Out::QUIET); return; }
+
+    import_keys(*this);
+
+    break;
+  }
+
+  case ZypperCommand::DELETE_KEYS_e:
+  {
+    if (runningHelp()) { out().info(_command_help, Out::QUIET); return; }
+
+    delete_keys(*this);
+
+    break;
+  }
+#endif
+
+  case ZypperCommand::LIST_KEYS_e:
+  {
+    if (runningHelp()) { out().info(_command_help, Out::QUIET); return; }
+
+    // load gpg keys
+    init_target(*this);
+
+    list <PublicKey> keys = God->keyRing()->trustedPublicKeys();
+
+    if ( keys.empty() )
+    {
+      cout << "No keys available" << endl;
+    }
+    else
+    {
+      for_( key, keys.begin(), keys.end() )
+      {
+        cout << "Found key: " << "ID: " << key->id() << " Name: " << key->name() << "]" << endl;
+        cout << "Fingerprint: " << "[" << key->fingerprint() << "]" << endl;
+      }
+    }
     break;
   }
 

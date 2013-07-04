@@ -90,6 +90,8 @@ struct ZypperCommand
   static const ZypperCommand RUG_PING;
   //!@}
 
+  static const ZypperCommand LIST_KEYS;
+
   enum Command
   {
     NONE_e,
@@ -159,7 +161,9 @@ struct ZypperCommand
     //RUG_INFO_OBSOLETES_e,
     //RUG_INFO_REQUIREMENTS_e,
     RUG_PATCH_SEARCH_e,
-    RUG_PING_e
+    RUG_PING_e,
+
+    LIST_KEYS_e
   };
 
   ZypperCommand(Command command) : _command(command) {}
