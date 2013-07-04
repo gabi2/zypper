@@ -4782,9 +4782,10 @@ void Zypper::doCommand()
     }
     else
     {
+      cout << "Trusted public keys:" << cout;
       for_( key, keys.begin(), keys.end() )
       {
-        cout << "Found key: " << "ID: " << key->id() << " Name: " << key->name() << "]" << endl;
+        cout << "Key ID: " << key->id() << " Name: " << key->name() << endl;
         cout << "Fingerprint: " << "[" << key->fingerprint() << "]" << endl;
       }
     }
